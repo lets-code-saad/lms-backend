@@ -16,7 +16,7 @@ connectToDB();
 app.use(
   cors({
     origin: [
-      "https://mern-lms-frontend-rust.vercel.app/",
+      "https://mern-lms-frontend-rust.vercel.app",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5000",
