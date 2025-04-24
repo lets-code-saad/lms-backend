@@ -12,8 +12,8 @@ const signupUser = new mongoose.Schema(
     },
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Courses" }],
     enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Courses" }],
-    resetPasswordToken: String,
-    resetPasswordTokenExpires: Date
+    resetPasswordOTP: String,
+    resetPasswordOTPExpires: Date,
   },
   { timestamps: true }
 );

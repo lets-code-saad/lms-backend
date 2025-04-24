@@ -3,8 +3,23 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const forgotPass = async (req, res) => {
-  const {email} = req.body
+  const { email } = req.body
+  const existingUser = await signup.findOne({ email })
+  if (!existingUser) {
+    return res.status(404).json({ message:"Account Not Found, Please signup first!"})
+  }
+  const otp = existingUser.resetPasswordOTP = Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+
+res.status(200).json({
+  message: "OTP has been sent to your email",
+  otp, // (Remove this in production for security)
+});
 }
+
+const resetPassWithOTP = async (req, res) => {
+};
 
 const signupRoute = async (req, res) => {
   const { username, email, password, role } = req.body;
@@ -96,4 +111,4 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { signupRoute, signinRoute, getUserProfile };
+module.exports = { signupRoute, signinRoute, getUserProfile, forgotPass,resetPassWithOTP };
