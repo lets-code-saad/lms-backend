@@ -1,10 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const connectToDB = require("./config/DB");
 const authRoutes = require("./routes/authRoutes");
 const rolesRoutes = require("./routes/rolesRoutes");
 const instructorRoutes = require("./routes/instructorRoutes")
 const userRoutes = require("./routes/userRoutes");
+const connectToDB = require("./config/db");
 
 // creating app
 const app = express();
