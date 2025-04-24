@@ -7,4 +7,4 @@ const connectDb = async () => {
     .then(() => console.log("DB CONNECTED"));
 };
 
-module.exports = connectDb;
+module.exports = connectDb

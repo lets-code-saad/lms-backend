@@ -4,13 +4,10 @@ const authRoutes = require("./routes/authRoutes");
 const rolesRoutes = require("./routes/rolesRoutes");
 const instructorRoutes = require("./routes/instructorRoutes")
 const userRoutes = require("./routes/userRoutes");
-const connectDb =require("./config/db")
+const connectDb = require("./config/db");
 
 // creating app
 const app = express();
-
-// calling the db
-connectDb()
 
 // for allowing the region to accept the server
 app.use(
@@ -23,6 +20,9 @@ app.use(
     ],
   })
 );
+
+// calling the db
+connectDb()
 
 // for parsing data to json
 app.use(express.json());
