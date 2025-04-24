@@ -16,7 +16,7 @@ connectDb();
 app.use(
   cors({
     origin: [
-      "lms-frontend-nu-liard.vercel.app",
+      "https://lms-frontend-nu-liard.vercel.app",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:5000",
