@@ -1,12 +1,12 @@
 const nodemailer = require("nodemailer")
 require("dotenv").config()
 
-const sendResetMail = async ({to,subject}) => {
+const sendResetMail = async ({to,subject,otp}) => {
     const transporter = nodemailer.createTransport({
-      service: "Gmail",
+      service: "gmail",
       auth: {
-        email: process.env.USER_EMAIL,
-        password: process.env.USER_EMAIL_PASS,
+        user: process.env.USER_EMAIL,
+        pass: process.env.USER_EMAIL_PASS,
       },
     });
 
@@ -14,6 +14,7 @@ const sendResetMail = async ({to,subject}) => {
         to,
         from: process.env.USER_EMAIL,
         subject,
+        text: `Your OTP Is ${otp}`
 })
 
 }

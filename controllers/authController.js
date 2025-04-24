@@ -1,24 +1,60 @@
 const signup = require("../models/signup");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendResetMail = require("../utils/mailer");
 
 const forgotPass = async (req, res) => {
-  const { email } = req.body
-  const existingUser = await signup.findOne({ email })
+  const { email } = req.body;
+  const existingUser = await signup.findOne({ email });
   if (!existingUser) {
-    return res.status(404).json({ message:"Account Not Found, Please signup first!"})
+    return res
+      .status(404)
+      .json({ message: "Account Did Not Exists, Please signup first!" });
   }
-  const otp = existingUser.resetPasswordOTP = Math.floor(
-    100000 + Math.random() * 900000
-  ).toString();
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-res.status(200).json({
-  message: "OTP has been sent to your email",
-  otp, // (Remove this in production for security)
-});
-}
+  existingUser.resetPasswordOTP = otp;
+  existingUser.resetPasswordOTPExpires = Date.now() + 300000; // 5 minutes expiry time
+
+  await existingUser.save();
+
+  try {
+    await sendResetMail({
+      to: email,
+      subject: "Password Reset Request",
+      otp,
+    });
+    res
+      .status(200)
+      .json({ message: "OTP Sent To Your Email Successfully!" });
+  } catch (err) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 const resetPassWithOTP = async (req, res) => {
+  const { otp, password } = req.body;
+  const validUser = await signup.findOne({
+    // checking in the db
+    resetPasswordOTP: otp,
+    resetPasswordOTPExpires: { $gt: Date.now() }, // date must be greater(gt) than 5 mins
+  });
+
+  if (!validUser) {
+   return res
+     .status(401)
+     .json({ message: "Invalid Or Expired OTP!" });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 6);
+
+  validUser.password = hashedPassword;
+  validUser.resetPasswordOTP = undefined;
+  validUser.resetPasswordOTPExpires = undefined;
+// saving to db
+  await validUser.save();
+// displaying success message
+  res.status(200).json({message:"Password Changed Successfully!"})
 };
 
 const signupRoute = async (req, res) => {
@@ -111,4 +147,10 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { signupRoute, signinRoute, getUserProfile, forgotPass,resetPassWithOTP };
+module.exports = {
+  signupRoute,
+  signinRoute,
+  getUserProfile,
+  forgotPass,
+  resetPassWithOTP,
+};

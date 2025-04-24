@@ -35,10 +35,11 @@ app.use("/admin", rolesRoutes);
 app.use("/user", userRoutes);
 app.use("/instructor", instructorRoutes);
 
+// running locally on the system
+const port = 5000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
-// const port = 5000;
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
-
+// running live on the server
 module.exports = app
