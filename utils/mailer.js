@@ -12,7 +12,7 @@ const sendResetMail = async ({to,subject,otp}) => {
 
     await transporter.sendMail({
         to,
-        from: process.env.USER_EMAIL,
+        from: "Saad Edemy",
         subject,
         text: `Your OTP Is ${otp}`
 })

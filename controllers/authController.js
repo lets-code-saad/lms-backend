@@ -33,28 +33,30 @@ const forgotPass = async (req, res) => {
 };
 
 const resetPassWithOTP = async (req, res) => {
-  const { otp, password } = req.body;
-  const validUser = await signup.findOne({
-    // checking in the db
-    resetPasswordOTP: otp,
-    resetPasswordOTPExpires: { $gt: Date.now() }, // date must be greater(gt) than 5 mins
-  });
+try {
+    const { otp, password } = req.body;
+    const validUser = await signup.findOne({
+      // checking in the db
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: Date.now() }, // date must be greater(gt) than 5 mins
+    });
 
-  if (!validUser) {
-   return res
-     .status(401)
-     .json({ message: "Invalid Or Expired OTP!" });
-  }
+    if (!validUser) {
+      return res.status(401).json({ message: "Invalid Or Expired OTP!" });
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 6);
+    const hashedPassword = await bcrypt.hash(password, 6);
 
-  validUser.password = hashedPassword;
-  validUser.resetPasswordOTP = undefined;
-  validUser.resetPasswordOTPExpires = undefined;
-// saving to db
-  await validUser.save();
-// displaying success message
-  res.status(200).json({message:"Password Changed Successfully!"})
+    validUser.password = hashedPassword;
+    validUser.resetPasswordOTP = undefined;
+    validUser.resetPasswordOTPExpires = undefined;
+    // saving to db
+    await validUser.save();
+    // displaying success message
+    res.status(200).json({ message: "Password Changed Successfully!" });
+} catch (error) {
+  return res.status(500).json({message:"Internal Server Error"})
+}
 };
 
 const signupRoute = async (req, res) => {

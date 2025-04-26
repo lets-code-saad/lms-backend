@@ -37,13 +37,15 @@ const addCourse = async (req, res) => {
 };
 const getCourses = async (req, res) => {
   try {
-    const isUserExist = await signup
-      .findById(req.person.personId)
-      .populate("courses");
+    const isUserExist = await signup.findById(req.person.personId).populate({
+      path: "courses",
+      populate: {
+        path: "enrolledStudents", // this will populate users inside each course
+      },
+    });
     if (!isUserExist) {
       return res.status(403).json({ message: "User Not Found" });
     }
-
 
     const coursesWithStudentCount = isUserExist.courses.map((course) => {
       const enrolledStudentCount = course.enrolledStudents.length;
@@ -62,6 +64,7 @@ const getCourses = async (req, res) => {
     return res.status(500).json("Internal Server Error");
   }
 };
+
 const getSingleCourse = async (req, res) => {
   const { course_id } = req.params;
   try {
@@ -78,9 +81,8 @@ const getSingleCourse = async (req, res) => {
 };
 const getAllCourses = async (req, res) => {
   try {
-    
     // it will find all the courses
-    const allCourses = await coursesModel.find().populate("user")
+    const allCourses = await coursesModel.find().populate("user");
     // displaying success message
     res.status(200).json({ message: "All Courses", allCourses: allCourses });
   } catch (error) {
@@ -113,11 +115,11 @@ const enrollCourse = async (req, res) => {
   isUserExist.enrolledCourses.push(courseToEnroll._id);
 
   // saving that user to the enrolledStudents array
-  courseToEnroll.enrolledStudents.push(isUserExist._id)
+  courseToEnroll.enrolledStudents.push(isUserExist._id);
 
-// saving both
+  // saving both
   await isUserExist.save();
-  await courseToEnroll.save()
+  await courseToEnroll.save();
 
   // populating the array
   await isUserExist.populate("enrolledCourses");
@@ -161,7 +163,36 @@ const unEnrollCourse = async (req, res) => {
 };
 
 const deleteCourse = async (req, res) => {
-  // const thumbnailBase64 =
+  try {
+    const { course_id } = req.params;
+    const userId = req.person.personId;
+    const existingUser = await signup.findById(userId);
+    if (!existingUser) {
+      return res
+        .status(400)
+        .json({ message: "User Not Found, Please Signup!" });
+    }
+    const courseToDelete = await coursesModel.findById(course_id);
+    if (!courseToDelete) {
+      return res.status(400).json({ message: "Course Not Found" });
+    }
+
+    // deleting the course
+    await coursesModel.findByIdAndDelete(course_id);
+
+    // removing the reference id from db
+    existingUser.courses = existingUser.courses.filter(
+      (courseId) => courseId.toString() !== course_id
+    );
+
+    // saving into db
+    await existingUser.save();
+
+    // displaying success message
+    res.status(200).json({ message: "Course Deleted Successfully!" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
 module.exports = {
