@@ -6,14 +6,16 @@ const coursesSchema = new mongoose.Schema(
     courseDescription: { type: String, require: true },
     coursePrice: { type: String, require: true },
     courseDuration: { type: String },
-    enrolledStudents:[{type:mongoose.Schema.Types.ObjectId, ref:"Registrations"}],
+    enrolledStudents: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Registrations" },
+    ],
     thumbnail: { type: String, require: true },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registrations",
       require: true,
     },
-
+    lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lessons" }],
   },
   { timestamps: true }
 );

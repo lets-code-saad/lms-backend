@@ -4,7 +4,8 @@ const authRoutes = require("./routes/authRoutes");
 const rolesRoutes = require("./routes/rolesRoutes");
 const instructorRoutes = require("./routes/instructorRoutes")
 const userRoutes = require("./routes/userRoutes");
-const connectDb = require("./config/db")
+const connectDb = require("./config/db");
+const bodyParser = require("body-parser");
 
 // creating app
 const app = express();
@@ -27,6 +28,7 @@ app.use(
 
 // for parsing data to json
 app.use(express.json());
+app.use(bodyParser.json({limit:"10mb"}))
 
 // Routes
 app.get("/", (req, res) => res.send("Server is running like a butter"));
@@ -34,6 +36,8 @@ app.use("/auth", authRoutes);
 app.use("/admin", rolesRoutes);
 app.use("/user", userRoutes);
 app.use("/instructor", instructorRoutes);
+app.use("/Videos", express.static("Videos"));
+
 
 // running locally on the system
 const port = 5000;

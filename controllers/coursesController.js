@@ -1,4 +1,5 @@
 const coursesModel = require("../models/coursesModel");
+const lessonModel = require("../models/lessonModel");
 const signup = require("../models/signup");
 
 const addCourse = async (req, res) => {
@@ -35,6 +36,37 @@ const addCourse = async (req, res) => {
     return res.status(500).json("Internal Server Error");
   }
 };
+const addLesson = async (req, res) => {
+  try {
+    const { lessonTitle, lessonDescription } = req.body;
+    if (!lessonTitle || !lessonDescription) {
+      return res.status(400).json({ message: "All Fields Are Required!" });
+    }
+    const { course_id } = req.params;
+    const userId = req.person.personId;
+    const lessonOfCourse = await coursesModel.findById(course_id).populate("lessons");
+    const isUserExist = await signup.findById(userId);
+    if (!lessonOfCourse || !isUserExist) {
+      return res.status(404).json({ message: "User Or Course Not Found" });
+    }
+    const lessonVideoURL = req.file?.path; // because stored in diskStorage
+
+    const newLesson = lessonModel({
+      lessonTitle,
+      lessonDescription,
+      lessonVideoURL,
+      course: course_id,
+      user:userId
+    });
+await newLesson.save()
+    lessonOfCourse?.lessons?.push(newLesson._id); // pushing it into the lessons array
+
+    await lessonOfCourse.save();
+    res.status(201).json({ message: "Lesson Added Successfully!", newLesson });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
 const getCourses = async (req, res) => {
   try {
     const isUserExist = await signup.findById(req.person.personId).populate({
@@ -44,7 +76,7 @@ const getCourses = async (req, res) => {
       },
     });
     if (!isUserExist) {
-      return res.status(403).json({ message: "User Not Found" });
+      return res.status(404).json({ message: "User Not Found" });
     }
 
     const coursesWithStudentCount = isUserExist.courses.map((course) => {
@@ -104,8 +136,8 @@ const enrollCourse = async (req, res) => {
   }
   // checking if the user is already enrolled
   // .some() Checks only in array if any course in the array matches the ID
-  const alreadyEnrolled = isUserExist.enrolledCourses.some(
-    (courseId) => courseId.toString() === course_id
+  const alreadyEnrolled = courseToEnroll?.enrolledStudents?.some(
+    (studentId) => studentId.toString() === userId.toString()
   );
   if (alreadyEnrolled) {
     return res.status(403).json({ message: "You are already enrolled!" });
@@ -131,28 +163,38 @@ const enrollCourse = async (req, res) => {
     // telling that the user is enrolled as a boolean
   });
 };
-
 const unEnrollCourse = async (req, res) => {
   const { course_id } = req.params;
   const userId = req.person.personId;
-  if (!course_id || !userId) {
+  const isUserExist = await signup.findById(userId);
+  const courseToUnenroll = await coursesModel.findById(course_id);
+
+  if (!isUserExist || !courseToUnenroll) {
     return res
       .status(400)
       .json({ message: "Course Or User Not Found", isEnrolled: false });
   }
-  const isUserExist = await signup.findById(userId);
-  // checking if the index is -1 (not exist)
-  const courseIndex = isUserExist.enrolledCourses.indexOf(course_id);
-  if (courseIndex === -1) {
-    return res.status(400).json({
-      message: "You Are Not Enrolled In This Course",
-      isEnrolled: false,
-    });
+  const alreadyEnrolled = courseToUnenroll?.enrolledStudents?.some(
+    (studentId) => studentId.toString() === userId.toString()
+  );
+  if (!alreadyEnrolled) {
+    return res
+      .status(400)
+      .json({ message: "You Are Already Enrolled!", isEnrolled: false });
   }
+
+  // removing the courseId from the enrolledStudents array
+  courseToUnenroll.enrolledStudents = courseToUnenroll.enrolledStudents.filter(
+    (courseId) => courseId.toString() !== userId.toString()
+  );
 
   // removing the course from array, unEnrolling...
   // splice(startIndex, howManyNumbersToDeleteFromStartIndex)
-  isUserExist.enrolledCourses.splice(courseIndex, 1);
+  isUserExist.enrolledCourses = isUserExist.enrolledCourses.filter(
+    (courseId) => courseId.toString() !== course_id.toString()
+  );
+  // saving
+  await courseToUnenroll.save();
   // saving the user in db
   await isUserExist.save();
 
@@ -203,4 +245,5 @@ module.exports = {
   deleteCourse,
   enrollCourse,
   unEnrollCourse,
+  addLesson,
 };
