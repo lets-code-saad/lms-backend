@@ -50,6 +50,9 @@ const addLesson = async (req, res) => {
       return res.status(404).json({ message: "User Or Course Not Found" });
     }
     const lessonVideoURL = req.file?.path; // because stored in diskStorage
+    if (!lessonVideoURL) {  
+      return res.status(400).json({ message: "All Fields Are Required!" });
+}
 
     const newLesson = lessonModel({
       lessonTitle,
@@ -100,11 +103,11 @@ const getCourses = async (req, res) => {
 const getSingleCourse = async (req, res) => {
   const { course_id } = req.params;
   try {
-    const isCourseExist = await coursesModel.findById(course_id);
+    const isCourseExist = await coursesModel.findById(course_id).populate("lessons");
     if (!isCourseExist) {
       return res.status(403).json({ message: "Course Not Found" });
     }
-
+await isCourseExist.save()
     // Displayig success messsage
     return res.status(200).json(isCourseExist);
   } catch (error) {
