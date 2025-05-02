@@ -103,7 +103,10 @@ const getCourses = async (req, res) => {
 const getSingleCourse = async (req, res) => {
   const { course_id } = req.params;
   try {
-    const isCourseExist = await coursesModel.findById(course_id).populate("lessons");
+    const isCourseExist = await coursesModel.findById(course_id).populate({
+      path: "courses",
+      populate:{path:"lessons"}
+    });
     if (!isCourseExist) {
       return res.status(403).json({ message: "Course Not Found" });
     }
