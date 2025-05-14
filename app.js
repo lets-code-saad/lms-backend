@@ -27,8 +27,9 @@ app.use(
 
 
 // for parsing data to json
-app.use(express.json());
-app.use(bodyParser.json({limit:"100mb"}))
+app.use(express.json({limit:"100mb"}));
+app.use(bodyParser.json({ limit: "100mb" }))
+app.use(express.urlencoded({extended:true, limit:"100mb"}))
 
 // Routes
 app.get("/", (req, res) => res.send("Server is running like a butter"));

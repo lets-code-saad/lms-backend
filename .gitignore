@@ -1,2 +1,4 @@
 /node_modules
+Videos/
+*.mp4
 /.env

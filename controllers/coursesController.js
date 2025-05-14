@@ -36,40 +36,6 @@ const addCourse = async (req, res) => {
     return res.status(500).json("Internal Server Error");
   }
 };
-const addLesson = async (req, res) => {
-  try {
-    const { lessonTitle, lessonDescription } = req.body;
-    if (!lessonTitle || !lessonDescription) {
-      return res.status(400).json({ message: "All Fields Are Required!" });
-    }
-    const { course_id } = req.params;
-    const userId = req.person.personId;
-    const lessonOfCourse = await coursesModel.findById(course_id).populate("lessons");
-    const isUserExist = await signup.findById(userId);
-    if (!lessonOfCourse || !isUserExist) {
-      return res.status(404).json({ message: "User Or Course Not Found" });
-    }
-    const lessonVideoURL = req.file?.path; // because stored in diskStorage
-    if (!lessonVideoURL) {  
-      return res.status(400).json({ message: "All Fields Are Required!" });
-}
-
-    const newLesson = lessonModel({
-      lessonTitle,
-      lessonDescription,
-      lessonVideoURL,
-      course: course_id,
-      user:userId
-    });
-await newLesson.save()
-    lessonOfCourse?.lessons?.push(newLesson._id); // pushing it into the lessons array
-
-    await lessonOfCourse.save();
-    res.status(201).json({ message: "Lesson Added Successfully!", newLesson });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error", error: error.message });
-  }
-};
 const getCourses = async (req, res) => {
   try {
     const isUserExist = await signup.findById(req.person.personId).populate({
@@ -103,11 +69,13 @@ const getCourses = async (req, res) => {
 const getSingleCourse = async (req, res) => {
   const { course_id } = req.params;
   try {
-    const isCourseExist = await coursesModel.findById(course_id).populate("lessons");
+    const isCourseExist = await coursesModel
+      .findById(course_id)
+      .populate("user").populate("lessons");
     if (!isCourseExist) {
       return res.status(403).json({ message: "Course Not Found" });
     }
-await isCourseExist.save()
+    await isCourseExist.save();
     // Displayig success messsage
     return res.status(200).json(isCourseExist);
   } catch (error) {
@@ -117,7 +85,11 @@ await isCourseExist.save()
 const getAllCourses = async (req, res) => {
   try {
     // it will find all the courses
-    const allCourses = await coursesModel.find().populate("user");
+    const allCourses = await coursesModel
+      .find()
+      .populate("user", "username email")
+      .lean(); // to get javascript objects
+
     // displaying success message
     res.status(200).json({ message: "All Courses", allCourses: allCourses });
   } catch (error) {
@@ -248,5 +220,4 @@ module.exports = {
   deleteCourse,
   enrollCourse,
   unEnrollCourse,
-  addLesson,
 };

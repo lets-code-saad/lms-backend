@@ -5,10 +5,10 @@ const {
   getCourses,
   getSingleCourse,
   deleteCourse,
-  addLesson,
 } = require("../controllers/coursesController");
 const checkRole = require("../middlewares/roleBaseAuth");
 const { upload, videoUpload } = require("../middlewares/thumbnailUpload");
+const {addLesson, getLessons, deleteLesson} = require("../controllers/lessonsController");
 const router = express.Router();
 
 router.post(
@@ -18,6 +18,15 @@ router.post(
   upload.single("thumbnail"),
   addCourse
 );
+router.get("/getCourses", authToken, checkRole(["instructor"]), getCourses);
+router.post(
+  "/delete-course/:course_id",
+  authToken,
+  checkRole(["instructor", "admin"]),
+  deleteCourse
+);
+// LESSONS ROUTES
+
 // add lesson
 router.post(
   "/addLesson/:course_id",
@@ -26,12 +35,8 @@ router.post(
   videoUpload.single("lessonVideoURL"),
   addLesson
 );
-router.get("/getCourses", authToken, checkRole(["instructor"]), getCourses);
-router.post(
-  "/delete-course/:course_id",
-  authToken,
-  checkRole(["instructor", "admin"]),
-  deleteCourse
-);
-
+// get lessons
+router.get("/getLessons/:course_id", authToken, checkRole(["instructor"]), getLessons)
+// delete lesson
+router.delete("/deleteLesson/:lesson_id", authToken, checkRole(["instructor"]), deleteLesson);
 module.exports = router;
